@@ -74,98 +74,120 @@
   </section>
 
   <script>
-    const hasVisited = localStorage.getItem('visitedBrainrotMarket')
-    const welcomeSection = document.getElementById('welcomeSection')
-    const skip = document.getElementById('SkipBtn')
-    const accountArea = document.getElementById('accountArea')
-    const settingsBtn = document.getElementById('settingsBtn')
-    const settingsPanel = document.getElementById('settingsPanel')
-    const overlay = document.getElementById('overlay')
-    const clearDataBtn = document.getElementById('clearDataBtn')
-    const profilePicInput = document.getElementById('profilePicInput')
-    const displayNameInput = document.getElementById('displayNameInput')
-    const saveSettingsBtn = document.getElementById('saveSettingsBtn')
+  const hasVisited = localStorage.getItem('visitedBrainrotMarket')
+  const welcomeSection = document.getElementById('welcomeSection')
+  const skip = document.getElementById('SkipBtn')
+  const accountArea = document.getElementById('accountArea')
+  const settingsBtn = document.getElementById('settingsBtn')
+  const settingsPanel = document.getElementById('settingsPanel')
+  const overlay = document.getElementById('overlay')
+  const clearDataBtn = document.getElementById('clearDataBtn')
+  const profilePicInput = document.getElementById('profilePicInput')
+  const displayNameInput = document.getElementById('displayNameInput')
+  const saveSettingsBtn = document.getElementById('saveSettingsBtn')
 
-    if (!hasVisited) {
-      welcomeSection.classList.remove('hidden')
-      localStorage.setItem('visitedBrainrotMarket', 'true')
-      if (skip) skip.addEventListener('click', () => welcomeSection.classList.add('hidden'))
-    }
+  // Show welcome section if first time
+  if (!hasVisited) {
+    welcomeSection.classList.remove('hidden')
+    localStorage.setItem('visitedBrainrotMarket', 'true')
+    if (skip) skip.addEventListener('click', () => welcomeSection.classList.add('hidden'))
+  }
 
-    let savedUser = JSON.parse(localStorage.getItem('linkedGoogleUser'))
-    if (savedUser) renderLinkedAccount(savedUser)
+  let savedUser = JSON.parse(localStorage.getItem('linkedGoogleUser'))
+  if (savedUser) renderLinkedAccount(savedUser)
+  else showLoginPrompt()
 
-    function handleCredentialResponse(response) {
-      const token = response.credential
-      const payload = JSON.parse(atob(token.split('.')[1]))
-      const user = { name: payload.name, picture: payload.picture, email: payload.email }
-      localStorage.setItem('linkedGoogleUser', JSON.stringify(user))
-      renderLinkedAccount(user)
-      welcomeSection.classList.add('hidden')
-    }
+  function showLoginPrompt() {
+    accountArea.innerHTML = `
+      <div>
+        <div id="g_id_onload"
+          data-client_id="261028400031-8oi83h2l70rkll5t73rl0jv1ugb57iko.apps.googleusercontent.com"
+          data-context="signin"
+          data-ux_mode="popup"
+          data-callback="handleCredentialResponse"
+          data-auto_prompt="false"></div>
+        <div class="g_id_signin"
+          data-type="standard"
+          data-shape="rectangular"
+          data-theme="filled_blue"
+          data-text="signin_with"
+          data-size="medium"
+          data-logo_alignment="left"></div>
+      </div>
+    `
+  }
 
-    function renderLinkedAccount(user) {
-      accountArea.innerHTML = `
-        <div class="flex items-center space-x-3">
-          <div class="relative">
-            <img src="${user.picture}" class="w-10 h-10 rounded-full object-cover">
-            <div class="online-dot"></div>
-          </div>
-          <span class="font-semibold">${user.name}</span>
-          <button id="logoutBtn" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg text-sm">Sign Out</button>
+  function handleCredentialResponse(response) {
+    const token = response.credential
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    const user = { name: payload.name, picture: payload.picture, email: payload.email }
+    localStorage.setItem('linkedGoogleUser', JSON.stringify(user))
+    renderLinkedAccount(user)
+    welcomeSection.classList.add('hidden')
+  }
+
+  function renderLinkedAccount(user) {
+    accountArea.innerHTML = `
+      <div class="flex items-center space-x-3">
+        <div class="relative">
+          <img src="${user.picture}" class="w-10 h-10 rounded-full object-cover">
+          <div class="online-dot"></div>
         </div>
-      `
-      document.getElementById('logoutBtn').addEventListener('click', () => {
-        localStorage.removeItem('linkedGoogleUser')
-        location.reload()
-      })
-    }
-
-    settingsBtn.addEventListener('click', () => {
-      settingsPanel.classList.toggle('translate-x-full')
-      overlay.classList.toggle('hidden')
+        <span class="font-semibold">${user.name}</span>
+        <button id="logoutBtn" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg text-sm">Sign Out</button>
+      </div>
+    `
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('linkedGoogleUser')
+      showLoginPrompt()
     })
+  }
 
-    overlay.addEventListener('click', () => {
-      settingsPanel.classList.add('translate-x-full')
-      overlay.classList.add('hidden')
-    })
+  settingsBtn.addEventListener('click', () => {
+    settingsPanel.classList.toggle('translate-x-full')
+    overlay.classList.toggle('hidden')
+  })
 
-    clearDataBtn.addEventListener('click', () => {
-      localStorage.clear()
-      location.reload()
-    })
+  overlay.addEventListener('click', () => {
+    settingsPanel.classList.add('translate-x-full')
+    overlay.classList.add('hidden')
+  })
 
-    saveSettingsBtn.addEventListener('click', () => {
-      let user = JSON.parse(localStorage.getItem('linkedGoogleUser')) || { name: "Guest", picture: "https://cdn-icons-png.flaticon.com/512/847/847969.png" }
-      const newName = displayNameInput.value.trim()
-      if (newName) {
-        const existingUsers = JSON.parse(localStorage.getItem('existingNames')) || []
-        let finalName = newName
-        let count = 1
-        while (existingUsers.includes(finalName)) {
-          finalName = `${newName}${count}`
-          count++
-        }
-        user.name = finalName
-        if (!existingUsers.includes(finalName)) existingUsers.push(finalName)
-        localStorage.setItem('existingNames', JSON.stringify(existingUsers))
+  clearDataBtn.addEventListener('click', () => {
+    localStorage.clear()
+    location.reload() // reload immediately to reset UI
+  })
+
+  saveSettingsBtn.addEventListener('click', () => {
+    let user = JSON.parse(localStorage.getItem('linkedGoogleUser')) || { name: "Guest", picture: "https://cdn-icons-png.flaticon.com/512/847/847969.png" }
+    const newName = displayNameInput.value.trim()
+    if (newName) {
+      const existingUsers = JSON.parse(localStorage.getItem('existingNames')) || []
+      let finalName = newName
+      let count = 1
+      while (existingUsers.includes(finalName)) {
+        finalName = `${newName}${count}`
+        count++
       }
-      if (profilePicInput.files[0]) {
-        const reader = new FileReader()
-        reader.onload = e => {
-          user.picture = e.target.result
-          localStorage.setItem('linkedGoogleUser', JSON.stringify(user))
-          renderLinkedAccount(user)
-        }
-        reader.readAsDataURL(profilePicInput.files[0])
-      } else {
+      user.name = finalName
+      if (!existingUsers.includes(finalName)) existingUsers.push(finalName)
+      localStorage.setItem('existingNames', JSON.stringify(existingUsers))
+    }
+    if (profilePicInput.files[0]) {
+      const reader = new FileReader()
+      reader.onload = e => {
+        user.picture = e.target.result
         localStorage.setItem('linkedGoogleUser', JSON.stringify(user))
         renderLinkedAccount(user)
       }
-      settingsPanel.classList.add('translate-x-full')
-      overlay.classList.add('hidden')
-    })
-  </script>
+      reader.readAsDataURL(profilePicInput.files[0])
+    } else {
+      localStorage.setItem('linkedGoogleUser', JSON.stringify(user))
+      renderLinkedAccount(user)
+    }
+    settingsPanel.classList.add('translate-x-full')
+    overlay.classList.add('hidden')
+  })
+</script>
 </body>
 </html>

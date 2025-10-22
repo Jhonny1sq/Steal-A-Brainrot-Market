@@ -28,65 +28,76 @@
     <h2 class="text-xl font-semibold mb-4">Welcome to Steal A Brainrot Market</h2>
     <p>Welcome let's get u started first let's link your roblox account!.</p>
     <button
-        id="linkBtn"
+        id="linkBtn2"
         class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold transition">
         Link Roblox Account
       </button>
       <button
         id="SkipBtn"
-        class="px-4 py-2 bg-blue-600 hover:bg-green-700 rounded-xl font-semibold transition">
+        class="px-4 py-2 bg-green-700 hover:bg-green-800 rounded-xl font-semibold transition">
         Skip Step For Now
       </button>
   </section>
 
   <script>
-
     const hasVisited = localStorage.getItem('visitedBrainrotMarket');
     const welcomeSection = document.getElementById('welcomeSection');
     const skip = document.getElementById('SkipBtn');
-    const linkBtn = document.getElementById('linkBtn');
+    const linkButtons = document.querySelectorAll('#linkBtn, #linkBtn2');
 
-    linkBtn.addEventListener('click', async () => {
-    const username = prompt("Enter your Roblox username:");
-    if (!username) return;
+    async function linkByUsername() {
+      const username = prompt("Enter your Roblox username:");
+      if (!username) return;
 
-    try {
-      const res = await fetch(`https://users.roblox.com/v1/users/by-username/${username}`);
-      if (!res.ok) throw new Error("User not found");
+      try {
+        const userRes = await fetch(`/.netlify/functions/get-user?username=${encodeURIComponent(username)}`);
+        if (!userRes.ok) throw new Error("User not found");
+        const userData = await userRes.json();
 
-      const data = await res.json();
-      const userId = data.id;
+        const userEntry = userData?.data?.[0];
+        if (!userEntry) throw new Error("No user found");
 
-      const avatarUrl = `https://www.roblox.com/headshot-thumbnail/image?userId=${userId}&width=420&height=420&format=png`;
+        const userId = userEntry.id;
 
-      let profileDiv = document.getElementById('profile');
-      if (!profileDiv) {
-        profileDiv = document.createElement('div');
-        profileDiv.id = 'profile';
-        document.body.appendChild(profileDiv);
+        const headshotRes = await fetch(`/.netlify/functions/get-headshot?userId=${encodeURIComponent(userId)}&size=420x420`);
+        if (!headshotRes.ok) throw new Error("Failed to get avatar");
+        const headshotData = await headshotRes.json();
+        const avatarUrl = headshotData?.data?.[0]?.imageUrl;
+
+        if (!avatarUrl) throw new Error("No avatar image returned");
+
+        let profileDiv = document.getElementById('profile');
+        if (!profileDiv) {
+          profileDiv = document.createElement('div');
+          profileDiv.id = 'profile';
+          document.body.appendChild(profileDiv);
+        }
+
+        profileDiv.innerHTML = `
+          <h3 class="mt-4 text-xl font-semibold">${username}</h3>
+          <img src="${avatarUrl}" class="w-24 h-24 rounded-full mt-2"/>
+        `;
+
+        localStorage.setItem('linkedRoblox', JSON.stringify({ username, userId, avatarUrl }));
+
+        alert(`Linked Roblox account: ${username}`);
+        welcomeSection.classList.add('hidden');
+      } catch (err) {
+        alert("Could not find that Roblox username.");
+        console.error(err);
       }
-      profileDiv.innerHTML = `
-        <h3 class="mt-4 text-xl font-semibold">${username}</h3>
-        <img src="${avatarUrl}" class="w-24 h-24 rounded-full mt-2"/>
-      `;
-
-      localStorage.setItem('linkedRoblox', username);
-
-      alert(`Linked Roblox account: ${username}`);
-    } catch (err) {
-      alert("Could not find that Roblox username.");
-      console.error(err);
     }
-  });
+
+    linkButtons.forEach(btn => btn.addEventListener('click', linkByUsername));
 
     if (!hasVisited) {
-        welcomeSection.classList.remove('hidden');
-
-        localStorage.setItem('visitedBrainrotMarket', 'true');
-        if (skip) {
+      welcomeSection.classList.remove('hidden');
+      localStorage.setItem('visitedBrainrotMarket', 'true');
+      if (skip) {
         skip.addEventListener('click', () => {
-          welcomeSection.classList.add('hidden');})
-        }
+          welcomeSection.classList.add('hidden');
+        });
+      }
     }
   </script>
 

@@ -23,9 +23,22 @@
     </div>
   </nav>
 
-  <section class="p-8">
+  <section id="welcomeSection" class="p-8 hidden">
     <h2 class="text-xl font-semibold mb-4">Welcome to Steal A Brainrot Market</h2>
     <p>Welcome let's get u started first let's link your roblox account!.</p>
   </section>
+
+  <script>
+
+    const hasVisited = localStorage.getItem('visitedBrainrotMarket');
+    const welcomeSection = document.getElementById('welcomeSection');
+
+    if (!hasVisited) {
+        welcomeSection.classList.remove('hidden');
+
+        localStorage.setItem('visitedBrainrotMarket', 'true');
+    }
+  </script>
+
 </body>
 </html>

@@ -25,26 +25,31 @@
 <body class="bg-gray-950 text-white min-h-screen">
   <nav class="flex items-center justify-between px-6 py-4 bg-gray-900 shadow-lg">
     <div class="flex items-center space-x-2">
-      <img src="https://i.redd.it/all-my-funny-cat-pictures-i-made-for-my-pfp-i-have-begun-v0-y0ne5wcdi5gb1.jpg?width=828&format=pjpg&auto=webp&s=5f5eed4f1cdb924a5afc1fb3a2fc5b958cc2e32f"
-           alt="Logo" class="w-10 h-10 rounded-full">
+      <img src="https://i.redd.it/all-my-funny-cat-pictures-i-made-for-my-pfp-i-have-begun-v0-y0ne5wcdi5gb1.jpg?width=828&format=pjpg&auto=webp&s=5f5eed4f1cdb924a5afc1fb3a2fc5b958cc2e32f" alt="Logo" class="w-10 h-10 rounded-full">
       <h1 class="text-2xl font-bold">Brainrot Market</h1>
     </div>
-    <div id="accountArea">
-      <div id="g_id_onload"
-           data-client_id="261028400031-8oi83h2l70rkll5t73rl0jv1ugb57iko.apps.googleusercontent.com"
-           data-context="signin"
-           data-ux_mode="popup"
-           data-callback="handleCredentialResponse"
-           data-auto_prompt="false"></div>
-      <div class="g_id_signin"
-           data-type="standard"
-           data-shape="rectangular"
-           data-theme="filled_blue"
-           data-text="signin_with"
-           data-size="large"
-           data-logo_alignment="left"></div>
+    <div class="flex items-center space-x-4">
+      <button id="settingsBtn" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg font-medium transition">⚙️ Settings</button>
+      <div id="accountArea"></div>
     </div>
   </nav>
+
+  <div id="settingsPanel" class="fixed top-0 right-0 w-72 h-full bg-gray-900 shadow-lg transform translate-x-full transition-transform duration-300 z-50 p-6">
+    <h2 class="text-xl font-bold mb-4">Settings</h2>
+    <div class="space-y-3">
+      <label class="flex items-center justify-between">
+        <span>Dark Mode</span>
+        <input type="checkbox" id="darkModeToggle" class="w-5 h-5 accent-green-500">
+      </label>
+      <label class="flex items-center justify-between">
+        <span>Notifications</span>
+        <input type="checkbox" id="notifToggle" class="w-5 h-5 accent-green-500">
+      </label>
+      <button id="clearDataBtn" class="mt-6 w-full px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-semibold">Clear Local Data</button>
+    </div>
+  </div>
+
+  <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-40"></div>
 
   <section id="welcomeSection" class="p-8 hidden">
     <h2 class="text-xl font-semibold mb-4">Welcome to Brainrot Market</h2>
@@ -64,9 +69,7 @@
            data-size="large"
            data-logo_alignment="left"></div>
     </div>
-    <button id="SkipBtn" class="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-xl font-semibold transition">
-      Skip Step For Now
-    </button>
+    <button id="SkipBtn" class="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-xl font-semibold transition">Skip Step For Now</button>
   </section>
 
   <script>
@@ -74,6 +77,10 @@
     const welcomeSection = document.getElementById('welcomeSection')
     const skip = document.getElementById('SkipBtn')
     const accountArea = document.getElementById('accountArea')
+    const settingsBtn = document.getElementById('settingsBtn')
+    const settingsPanel = document.getElementById('settingsPanel')
+    const overlay = document.getElementById('overlay')
+    const clearDataBtn = document.getElementById('clearDataBtn')
 
     if (!hasVisited) {
       welcomeSection.classList.remove('hidden')
@@ -109,6 +116,21 @@
         location.reload()
       })
     }
+
+    settingsBtn.addEventListener('click', () => {
+      settingsPanel.classList.toggle('translate-x-full')
+      overlay.classList.toggle('hidden')
+    })
+
+    overlay.addEventListener('click', () => {
+      settingsPanel.classList.add('translate-x-full')
+      overlay.classList.add('hidden')
+    })
+
+    clearDataBtn.addEventListener('click', () => {
+      localStorage.clear()
+      location.reload()
+    })
   </script>
 </body>
 </html>

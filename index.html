@@ -6,6 +6,8 @@
   <title>Brainrot Market</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" href="https://wepik.com/api/image/local/157243393/a02bafb9-15a8-4284-9daf-a6400c33da53?expires=1761192000&thumb=1&transparent=0&signature=a6015b205eff1a6deef684b5bfe2d1cbad1e48c26933c7602644b7fa6fe47af6" type="image/png">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <meta name="google-signin-client_id" content="261028400031-8oi83h2l70rkll5t73rl0jv1ugb57iko.apps.googleusercontent.com">
   <style>
     .online-dot {
       width: 10px;
@@ -28,79 +30,85 @@
       <h1 class="text-2xl font-bold">Brainrot Market</h1>
     </div>
     <div id="accountArea">
-      <button id="linkBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold transition">
-        Link With Google
-      </button>
+      <div id="g_id_onload"
+           data-client_id="261028400031-8oi83h2l70rkll5t73rl0jv1ugb57iko.apps.googleusercontent.com"
+           data-context="signin"
+           data-ux_mode="popup"
+           data-callback="handleCredentialResponse"
+           data-auto_prompt="false"></div>
+      <div class="g_id_signin"
+           data-type="standard"
+           data-shape="rectangular"
+           data-theme="filled_blue"
+           data-text="signin_with"
+           data-size="large"
+           data-logo_alignment="left"></div>
     </div>
   </nav>
 
   <section id="welcomeSection" class="p-8 hidden">
     <h2 class="text-xl font-semibold mb-4">Welcome to Brainrot Market</h2>
-    <p>Let's get you started — first link your Roblox account!</p>
-    <button id="linkBtn2" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold transition">
-      Link With Google
-    </button>
-    <button id="SkipBtn" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-xl font-semibold transition">
+    <p>Let's get you started — first link your Google account!</p>
+    <div class="mt-4">
+      <div id="g_id_onload_2"
+           data-client_id="261028400031-8oi83h2l70rkll5t73rl0jv1ugb57iko.apps.googleusercontent.com"
+           data-context="signin"
+           data-ux_mode="popup"
+           data-callback="handleCredentialResponse"
+           data-auto_prompt="false"></div>
+      <div class="g_id_signin"
+           data-type="standard"
+           data-shape="rectangular"
+           data-theme="filled_blue"
+           data-text="signin_with"
+           data-size="large"
+           data-logo_alignment="left"></div>
+    </div>
+    <button id="SkipBtn" class="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-xl font-semibold transition">
       Skip Step For Now
     </button>
   </section>
 
   <script>
-    const hasVisited = localStorage.getItem('visitedBrainrotMarket');
-    const welcomeSection = document.getElementById('welcomeSection');
-    const skip = document.getElementById('SkipBtn');
+    const hasVisited = localStorage.getItem('visitedBrainrotMarket')
+    const welcomeSection = document.getElementById('welcomeSection')
+    const skip = document.getElementById('SkipBtn')
+    const accountArea = document.getElementById('accountArea')
+
     if (!hasVisited) {
-      welcomeSection.classList.remove('hidden');
-      localStorage.setItem('visitedBrainrotMarket', 'true');
-      if (skip) {
-        skip.addEventListener('click', () => {
-          welcomeSection.classList.add('hidden');
-        });
-      }
+      welcomeSection.classList.remove('hidden')
+      localStorage.setItem('visitedBrainrotMarket', 'true')
+      if (skip) skip.addEventListener('click', () => welcomeSection.classList.add('hidden'))
     }
 
-    const accountArea = document.getElementById('accountArea');
-    const linkBtns = [document.getElementById('linkBtn'), document.getElementById('linkBtn2')];
-    let linkedUser = JSON.parse(localStorage.getItem('linkedUser'));
+    const savedUser = JSON.parse(localStorage.getItem('linkedGoogleUser'))
+    if (savedUser) renderLinkedAccount(savedUser)
 
-    function generateRandomUsername() {
-      const timestamp = Date.now().toString().slice(-6);
-      const random = Math.random().toString(36).substring(2, 5).toUpperCase();
-      return `user_${timestamp}_${random}`;
+    function handleCredentialResponse(response) {
+      const token = response.credential
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      const user = { name: payload.name, picture: payload.picture, email: payload.email }
+      localStorage.setItem('linkedGoogleUser', JSON.stringify(user))
+      renderLinkedAccount(user)
+      welcomeSection.classList.add('hidden')
     }
 
-    function renderLinkedAccount(username) {
+    function renderLinkedAccount(user) {
       accountArea.innerHTML = `
         <div class="flex items-center space-x-3">
           <div class="relative">
-            <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=random&color=fff&size=40"
-              class="w-10 h-10 rounded-full">
+            <img src="${user.picture}" class="w-10 h-10 rounded-full">
             <div class="online-dot"></div>
           </div>
-          <span class="font-semibold">${username}</span>
+          <span class="font-semibold">${user.name}</span>
           <button id="logoutBtn" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg text-sm">Sign Out</button>
         </div>
-      `;
+      `
       document.getElementById('logoutBtn').addEventListener('click', () => {
-        localStorage.removeItem('linkedUser');
-        location.reload();
-      });
+        localStorage.removeItem('linkedGoogleUser')
+        location.reload()
+      })
     }
-
-    if (linkedUser && linkedUser.username) {
-      renderLinkedAccount(linkedUser.username);
-    }
-
-    linkBtns.forEach(btn => {
-      if (!btn) return;
-      btn.addEventListener('click', () => {
-        const username = generateRandomUsername();
-        linkedUser = { username };
-        localStorage.setItem('linkedUser', JSON.stringify(linkedUser));
-        renderLinkedAccount(username);
-        welcomeSection.classList.add('hidden');
-      });
-    });
   </script>
 </body>
 </html>

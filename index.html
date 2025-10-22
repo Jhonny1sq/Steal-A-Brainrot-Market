@@ -6,90 +6,49 @@
   <title>Brainrot Market</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" href="https://wepik.com/api/image/local/157243393/a02bafb9-15a8-4284-9daf-a6400c33da53?expires=1761192000&thumb=1&transparent=0&signature=a6015b205eff1a6deef684b5bfe2d1cbad1e48c26933c7602644b7fa6fe47af6" type="image/png">
+  <style>
+    .online-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 9999px;
+      background: #22c55e;
+      border: 2px solid rgba(0,0,0,0.6);
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.25);
+    }
+  </style>
 </head>
-<body class="bg-gray-950 text-white">
+<body class="bg-gray-950 text-white min-h-screen">
   <nav class="flex items-center justify-between px-6 py-4 bg-gray-900 shadow-lg">
     <div class="flex items-center space-x-2">
       <img src="https://i.redd.it/all-my-funny-cat-pictures-i-made-for-my-pfp-i-have-begun-v0-y0ne5wcdi5gb1.jpg?width=828&format=pjpg&auto=webp&s=5f5eed4f1cdb924a5afc1fb3a2fc5b958cc2e32f"
            alt="Logo" class="w-10 h-10 rounded-full">
       <h1 class="text-2xl font-bold">Brainrot Market</h1>
     </div>
-
-    <div>
-      <button
-        id="linkBtn"
-        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold transition">
-        Link Roblox Account
+    <div id="accountArea">
+      <button id="linkBtn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold transition">
+        Link With Google
       </button>
     </div>
   </nav>
 
   <section id="welcomeSection" class="p-8 hidden">
-    <h2 class="text-xl font-semibold mb-4">Welcome to Steal A Brainrot Market</h2>
-    <p>Welcome let's get u started first let's link your roblox account!.</p>
-    <button
-        id="linkBtn2"
-        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold transition">
-        Link Roblox Account
-      </button>
-      <button
-        id="SkipBtn"
-        class="px-4 py-2 bg-green-700 hover:bg-green-800 rounded-xl font-semibold transition">
-        Skip Step For Now
-      </button>
+    <h2 class="text-xl font-semibold mb-4">Welcome to Brainrot Market</h2>
+    <p>Let's get you started — first link your Roblox account!</p>
+    <button id="linkBtn2" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold transition">
+      Link With Google
+    </button>
+    <button id="SkipBtn" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-xl font-semibold transition">
+      Skip Step For Now
+    </button>
   </section>
 
   <script>
     const hasVisited = localStorage.getItem('visitedBrainrotMarket');
     const welcomeSection = document.getElementById('welcomeSection');
     const skip = document.getElementById('SkipBtn');
-    const linkButtons = document.querySelectorAll('#linkBtn, #linkBtn2');
-
-    async function linkByUsername() {
-      const username = prompt("Enter your Roblox username:");
-      if (!username) return;
-
-      try {
-        const userRes = await fetch(`/.netlify/functions/get-user?username=${encodeURIComponent(username)}`);
-        if (!userRes.ok) throw new Error("User not found");
-        const userData = await userRes.json();
-
-        const userEntry = userData?.data?.[0];
-        if (!userEntry) throw new Error("No user found");
-
-        const userId = userEntry.id;
-
-        const headshotRes = await fetch(`/.netlify/functions/get-headshot?userId=${encodeURIComponent(userId)}&size=420x420`);
-        if (!headshotRes.ok) throw new Error("Failed to get avatar");
-        const headshotData = await headshotRes.json();
-        const avatarUrl = headshotData?.data?.[0]?.imageUrl;
-
-        if (!avatarUrl) throw new Error("No avatar image returned");
-
-        let profileDiv = document.getElementById('profile');
-        if (!profileDiv) {
-          profileDiv = document.createElement('div');
-          profileDiv.id = 'profile';
-          document.body.appendChild(profileDiv);
-        }
-
-        profileDiv.innerHTML = `
-          <h3 class="mt-4 text-xl font-semibold">${username}</h3>
-          <img src="${avatarUrl}" class="w-24 h-24 rounded-full mt-2"/>
-        `;
-
-        localStorage.setItem('linkedRoblox', JSON.stringify({ username, userId, avatarUrl }));
-
-        alert(`Linked Roblox account: ${username}`);
-        welcomeSection.classList.add('hidden');
-      } catch (err) {
-        alert("Could not find that Roblox username.");
-        console.error(err);
-      }
-    }
-
-    linkButtons.forEach(btn => btn.addEventListener('click', linkByUsername));
-
     if (!hasVisited) {
       welcomeSection.classList.remove('hidden');
       localStorage.setItem('visitedBrainrotMarket', 'true');
@@ -99,7 +58,49 @@
         });
       }
     }
-  </script>
 
+    const accountArea = document.getElementById('accountArea');
+    const linkBtns = [document.getElementById('linkBtn'), document.getElementById('linkBtn2')];
+    let linkedUser = JSON.parse(localStorage.getItem('linkedUser'));
+
+    function generateRandomUsername() {
+      const timestamp = Date.now().toString().slice(-6);
+      const random = Math.random().toString(36).substring(2, 5).toUpperCase();
+      return `user_${timestamp}_${random}`;
+    }
+
+    function renderLinkedAccount(username) {
+      accountArea.innerHTML = `
+        <div class="flex items-center space-x-3">
+          <div class="relative">
+            <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(username)}&background=random&color=fff&size=40"
+              class="w-10 h-10 rounded-full">
+            <div class="online-dot"></div>
+          </div>
+          <span class="font-semibold">${username}</span>
+          <button id="logoutBtn" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg text-sm">Sign Out</button>
+        </div>
+      `;
+      document.getElementById('logoutBtn').addEventListener('click', () => {
+        localStorage.removeItem('linkedUser');
+        location.reload();
+      });
+    }
+
+    if (linkedUser && linkedUser.username) {
+      renderLinkedAccount(linkedUser.username);
+    }
+
+    linkBtns.forEach(btn => {
+      if (!btn) return;
+      btn.addEventListener('click', () => {
+        const username = generateRandomUsername();
+        linkedUser = { username };
+        localStorage.setItem('linkedUser', JSON.stringify(linkedUser));
+        renderLinkedAccount(username);
+        welcomeSection.classList.add('hidden');
+      });
+    });
+  </script>
 </body>
 </html>

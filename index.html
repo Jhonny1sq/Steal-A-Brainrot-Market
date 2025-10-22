@@ -9,31 +9,48 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <meta name="google-signin-client_id" content="261028400031-8oi83h2l70rkll5t73rl0jv1ugb57iko.apps.googleusercontent.com">
   <style>
-    body {
-      background-color: #f5f5f5;
-      color: #111;
-    }
     .online-dot {
       width: 10px;
       height: 10px;
       border-radius: 9999px;
       background: #22c55e;
-      border: 2px solid #fff;
+      border: 2px solid rgba(0,0,0,0.6);
       position: absolute;
       bottom: 0;
       right: 0;
-      box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.25);
     }
   </style>
 </head>
-<body class="min-h-screen">
-  <nav class="flex items-center justify-between px-6 py-4 bg-gray-200 shadow-md">
+<body class="bg-gray-950 text-white min-h-screen">
+  <nav class="flex items-center justify-between px-6 py-4 bg-gray-900 shadow-lg">
     <div class="flex items-center space-x-2">
       <img src="https://i.redd.it/all-my-funny-cat-pictures-i-made-for-my-pfp-i-have-begun-v0-y0ne5wcdi5gb1.jpg?width=828&format=pjpg&auto=webp&s=5f5eed4f1cdb924a5afc1fb3a2fc5b958cc2e32f" alt="Logo" class="w-10 h-10 rounded-full">
       <h1 class="text-2xl font-bold">Brainrot Market</h1>
     </div>
-    <div id="accountArea"></div>
+    <div class="flex items-center space-x-4">
+      <button id="settingsBtn" class="px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg font-medium transition">⚙️ Settings</button>
+      <div id="accountArea"></div>
+    </div>
   </nav>
+
+  <div id="settingsPanel" class="fixed top-0 right-0 w-80 h-full bg-gray-900 shadow-lg transform translate-x-full transition-transform duration-300 z-50 p-6">
+    <h2 class="text-xl font-bold mb-4">Settings</h2>
+    <div class="space-y-4">
+      <div>
+        <label class="block mb-1 font-semibold">Profile Picture</label>
+        <input type="file" id="profilePicInput" accept="image/*" class="w-full text-sm text-gray-300">
+      </div>
+      <div>
+        <label class="block mb-1 font-semibold">Display Name</label>
+        <input type="text" id="displayNameInput" placeholder="Enter a new name" class="w-full px-3 py-2 bg-gray-800 rounded-lg text-white focus:outline-none">
+      </div>
+      <button id="saveSettingsBtn" class="w-full mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg font-semibold">Save</button>
+      <button id="clearDataBtn" class="w-full px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-semibold">Clear Local Data</button>
+    </div>
+  </div>
+
+  <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-40"></div>
 
   <section id="welcomeSection" class="p-8 hidden">
     <h2 class="text-xl font-semibold mb-4">Welcome to Brainrot Market</h2>
@@ -48,38 +65,26 @@
       <div class="g_id_signin"
            data-type="standard"
            data-shape="rectangular"
-           data-theme="outline"
+           data-theme="filled_blue"
            data-text="signin_with"
            data-size="large"
            data-logo_alignment="left"></div>
     </div>
-    <button id="SkipBtn" class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition">Skip Step For Now</button>
+    <button id="SkipBtn" class="mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-xl font-semibold transition">Skip Step For Now</button>
   </section>
-
-  <div id="editProfileModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white text-black rounded-lg p-6 w-80">
-      <h2 class="text-lg font-bold mb-4">Edit Profile</h2>
-      <label class="block mb-2">New Name</label>
-      <input id="newNameInput" type="text" class="w-full p-2 border rounded mb-3" placeholder="Enter new name">
-      <label class="block mb-2">Profile Picture URL</label>
-      <input id="newPicInput" type="text" class="w-full p-2 border rounded mb-3" placeholder="Enter image URL">
-      <div class="flex justify-end space-x-2 mt-4">
-        <button id="cancelEdit" class="px-3 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancel</button>
-        <button id="saveEdit" class="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700">Save</button>
-      </div>
-    </div>
-  </div>
 
   <script>
     const hasVisited = localStorage.getItem('visitedBrainrotMarket')
     const welcomeSection = document.getElementById('welcomeSection')
     const skip = document.getElementById('SkipBtn')
     const accountArea = document.getElementById('accountArea')
-    const editProfileModal = document.getElementById('editProfileModal')
-    const newNameInput = document.getElementById('newNameInput')
-    const newPicInput = document.getElementById('newPicInput')
-    const cancelEdit = document.getElementById('cancelEdit')
-    const saveEdit = document.getElementById('saveEdit')
+    const settingsBtn = document.getElementById('settingsBtn')
+    const settingsPanel = document.getElementById('settingsPanel')
+    const overlay = document.getElementById('overlay')
+    const clearDataBtn = document.getElementById('clearDataBtn')
+    const profilePicInput = document.getElementById('profilePicInput')
+    const displayNameInput = document.getElementById('displayNameInput')
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn')
 
     if (!hasVisited) {
       welcomeSection.classList.remove('hidden')
@@ -87,20 +92,14 @@
       if (skip) skip.addEventListener('click', () => welcomeSection.classList.add('hidden'))
     }
 
-    const savedUser = JSON.parse(localStorage.getItem('linkedGoogleUser'))
-    const allUsers = JSON.parse(localStorage.getItem('allUsers') || '[]')
+    let savedUser = JSON.parse(localStorage.getItem('linkedGoogleUser'))
     if (savedUser) renderLinkedAccount(savedUser)
 
     function handleCredentialResponse(response) {
       const token = response.credential
       const payload = JSON.parse(atob(token.split('.')[1]))
       const user = { name: payload.name, picture: payload.picture, email: payload.email }
-      if (allUsers.some(u => u.name === user.name)) {
-        user.name = user.name + '_' + Math.floor(Math.random() * 1000)
-      }
-      allUsers.push(user)
       localStorage.setItem('linkedGoogleUser', JSON.stringify(user))
-      localStorage.setItem('allUsers', JSON.stringify(allUsers))
       renderLinkedAccount(user)
       welcomeSection.classList.add('hidden')
     }
@@ -109,48 +108,63 @@
       accountArea.innerHTML = `
         <div class="flex items-center space-x-3">
           <div class="relative">
-            <img src="${user.picture}" class="w-10 h-10 rounded-full border border-gray-300">
+            <img src="${user.picture}" class="w-10 h-10 rounded-full object-cover">
             <div class="online-dot"></div>
           </div>
           <span class="font-semibold">${user.name}</span>
-          <button id="editProfileBtn" class="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm">Edit</button>
-          <button id="logoutBtn" class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm">Sign Out</button>
+          <button id="logoutBtn" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg text-sm">Sign Out</button>
         </div>
       `
       document.getElementById('logoutBtn').addEventListener('click', () => {
         localStorage.removeItem('linkedGoogleUser')
         location.reload()
       })
-      document.getElementById('editProfileBtn').addEventListener('click', () => {
-        newNameInput.value = user.name
-        newPicInput.value = user.picture
-        editProfileModal.classList.remove('hidden')
-        editProfileModal.classList.add('flex')
-      })
     }
 
-    cancelEdit.addEventListener('click', () => {
-      editProfileModal.classList.add('hidden')
-      editProfileModal.classList.remove('flex')
+    settingsBtn.addEventListener('click', () => {
+      settingsPanel.classList.toggle('translate-x-full')
+      overlay.classList.toggle('hidden')
     })
 
-    saveEdit.addEventListener('click', () => {
-      const name = newNameInput.value.trim()
-      const picture = newPicInput.value.trim()
-      if (!name) return alert('Please enter a valid name.')
-      if (allUsers.some(u => u.name === name && u.email !== savedUser.email)) {
-        alert('That name is already taken.')
-        return
+    overlay.addEventListener('click', () => {
+      settingsPanel.classList.add('translate-x-full')
+      overlay.classList.add('hidden')
+    })
+
+    clearDataBtn.addEventListener('click', () => {
+      localStorage.clear()
+      location.reload()
+    })
+
+    saveSettingsBtn.addEventListener('click', () => {
+      let user = JSON.parse(localStorage.getItem('linkedGoogleUser')) || { name: "Guest", picture: "https://cdn-icons-png.flaticon.com/512/847/847969.png" }
+      const newName = displayNameInput.value.trim()
+      if (newName) {
+        const existingUsers = JSON.parse(localStorage.getItem('existingNames')) || []
+        let finalName = newName
+        let count = 1
+        while (existingUsers.includes(finalName)) {
+          finalName = `${newName}${count}`
+          count++
+        }
+        user.name = finalName
+        if (!existingUsers.includes(finalName)) existingUsers.push(finalName)
+        localStorage.setItem('existingNames', JSON.stringify(existingUsers))
       }
-      savedUser.name = name
-      savedUser.picture = picture || savedUser.picture
-      const index = allUsers.findIndex(u => u.email === savedUser.email)
-      if (index !== -1) allUsers[index] = savedUser
-      localStorage.setItem('linkedGoogleUser', JSON.stringify(savedUser))
-      localStorage.setItem('allUsers', JSON.stringify(allUsers))
-      renderLinkedAccount(savedUser)
-      editProfileModal.classList.add('hidden')
-      editProfileModal.classList.remove('flex')
+      if (profilePicInput.files[0]) {
+        const reader = new FileReader()
+        reader.onload = e => {
+          user.picture = e.target.result
+          localStorage.setItem('linkedGoogleUser', JSON.stringify(user))
+          renderLinkedAccount(user)
+        }
+        reader.readAsDataURL(profilePicInput.files[0])
+      } else {
+        localStorage.setItem('linkedGoogleUser', JSON.stringify(user))
+        renderLinkedAccount(user)
+      }
+      settingsPanel.classList.add('translate-x-full')
+      overlay.classList.add('hidden')
     })
   </script>
 </body>

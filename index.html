@@ -26,17 +26,32 @@
   <section id="welcomeSection" class="p-8 hidden">
     <h2 class="text-xl font-semibold mb-4">Welcome to Steal A Brainrot Market</h2>
     <p>Welcome let's get u started first let's link your roblox account!.</p>
+    <button
+        id="linkBtn"
+        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold transition">
+        Link Roblox Account
+      </button>
+      <button
+        id="SkipBtn"
+        class="px-4 py-2 bg-blue-600 hover:bg-green-700 rounded-xl font-semibold transition">
+        Skip Step For Now
+      </button>
   </section>
 
   <script>
 
     const hasVisited = localStorage.getItem('visitedBrainrotMarket');
     const welcomeSection = document.getElementById('welcomeSection');
+    const skip = document.getElementById('SkipBtn');
 
     if (!hasVisited) {
         welcomeSection.classList.remove('hidden');
 
         localStorage.setItem('visitedBrainrotMarket', 'true');
+        if (skip) {
+        skip.addEventListener('click', () => {
+          welcomeSection.classList.add('hidden');})
+        }
     }
   </script>
 

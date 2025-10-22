@@ -44,6 +44,40 @@
     const hasVisited = localStorage.getItem('visitedBrainrotMarket');
     const welcomeSection = document.getElementById('welcomeSection');
     const skip = document.getElementById('SkipBtn');
+    const linkBtn = document.getElementById('linkBtn');
+
+    linkBtn.addEventListener('click', async () => {
+    const username = prompt("Enter your Roblox username:");
+    if (!username) return;
+
+    try {
+      const res = await fetch(`https://users.roblox.com/v1/users/by-username/${username}`);
+      if (!res.ok) throw new Error("User not found");
+
+      const data = await res.json();
+      const userId = data.id;
+
+      const avatarUrl = `https://www.roblox.com/headshot-thumbnail/image?userId=${userId}&width=420&height=420&format=png`;
+
+      let profileDiv = document.getElementById('profile');
+      if (!profileDiv) {
+        profileDiv = document.createElement('div');
+        profileDiv.id = 'profile';
+        document.body.appendChild(profileDiv);
+      }
+      profileDiv.innerHTML = `
+        <h3 class="mt-4 text-xl font-semibold">${username}</h3>
+        <img src="${avatarUrl}" class="w-24 h-24 rounded-full mt-2"/>
+      `;
+
+      localStorage.setItem('linkedRoblox', username);
+
+      alert(`Linked Roblox account: ${username}`);
+    } catch (err) {
+      alert("Could not find that Roblox username.");
+      console.error(err);
+    }
+  });
 
     if (!hasVisited) {
         welcomeSection.classList.remove('hidden');

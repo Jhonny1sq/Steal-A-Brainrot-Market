@@ -98,24 +98,33 @@
   else showLoginPrompt()
 
   function showLoginPrompt() {
-    accountArea.innerHTML = `
-      <div>
-        <div id="g_id_onload"
-          data-client_id="261028400031-8oi83h2l70rkll5t73rl0jv1ugb57iko.apps.googleusercontent.com"
-          data-context="signin"
-          data-ux_mode="popup"
-          data-callback="handleCredentialResponse"
-          data-auto_prompt="false"></div>
-        <div class="g_id_signin"
-          data-type="standard"
-          data-shape="rectangular"
-          data-theme="filled_blue"
-          data-text="signin_with"
-          data-size="medium"
-          data-logo_alignment="left"></div>
-      </div>
-    `
-  }
+  accountArea.innerHTML = `
+    <div id="googleLoginContainer">
+      <div id="g_id_onload"
+        data-client_id="261028400031-8oi83h2l70rkll5t73rl0jv1ugb57iko.apps.googleusercontent.com"
+        data-context="signin"
+        data-ux_mode="popup"
+        data-callback="handleCredentialResponse"
+        data-auto_prompt="false"></div>
+      <div id="g_id_signin"
+        class="g_id_signin"
+        data-type="standard"
+        data-shape="rectangular"
+        data-theme="filled_blue"
+        data-text="signin_with"
+        data-size="medium"
+        data-logo_alignment="left"></div>
+    </div>
+  `
+  setTimeout(() => {
+    if (window.google && google.accounts && google.accounts.id) {
+      google.accounts.id.renderButton(
+        document.getElementById("g_id_signin"),
+        { theme: "filled_blue", size: "medium" }
+      )
+    }
+  }, 100)
+}
 
   function handleCredentialResponse(response) {
     const token = response.credential
@@ -127,21 +136,21 @@
   }
 
   function renderLinkedAccount(user) {
-    accountArea.innerHTML = `
-      <div class="flex items-center space-x-3">
-        <div class="relative">
-          <img src="${user.picture}" class="w-10 h-10 rounded-full object-cover">
-          <div class="online-dot"></div>
-        </div>
-        <span class="font-semibold">${user.name}</span>
-        <button id="logoutBtn" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg text-sm">Sign Out</button>
+  accountArea.innerHTML = `
+    <div class="flex items-center space-x-3">
+      <div class="relative">
+        <img src="${user.picture}" class="w-10 h-10 rounded-full object-cover">
+        <div class="online-dot"></div>
       </div>
-    `
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      localStorage.removeItem('linkedGoogleUser')
-      showLoginPrompt()
-    })
-  }
+      <span class="font-semibold">${user.name}</span>
+      <button id="logoutBtn" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded-lg text-sm">Sign Out</button>
+    </div>
+  `
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    localStorage.removeItem('linkedGoogleUser')
+    showLoginPrompt()
+  })
+}
 
   settingsBtn.addEventListener('click', () => {
     settingsPanel.classList.toggle('translate-x-full')

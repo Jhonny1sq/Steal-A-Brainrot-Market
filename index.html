@@ -139,16 +139,15 @@ function showLoginPrompt() {
 async function handleCredentialResponse(response) {
   const token = response.credential
 
-  // Verify user server-side
   const res = await fetch("/.netlify/functions/verifyUser", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ token })
-  })
-  const data = await res.json()
-  if (data.role === "owner") {
-    ownerPanel.classList.remove("hidden")
-  }
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ token })
+});
+const data = await res.json();
+console.log(data);
+if (data.role === "owner") ownerPanel.classList.remove("hidden");
+
 
   const payload = JSON.parse(atob(token.split('.')[1]))
   const userEmail = payload.email
